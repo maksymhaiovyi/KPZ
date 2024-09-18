@@ -9,8 +9,8 @@ namespace Shpytchuk.Vasyl.RobotChallange
     public class ShpytchukVasylAlgorithm : IRobotAlgorithm
     {
         protected static int COLLECT_ENERGY_DISTANCE = 2;
-        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 5;
-        protected static int MAX_RADIUS = 7;
+        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 3;
+        protected static int MAX_RADIUS = 9;
         protected static int CREATE_ROBOT_START_ENERGE = 100;
 
 
@@ -27,12 +27,6 @@ namespace Shpytchuk.Vasyl.RobotChallange
             Round = 0;
             Counter = 0;
             RobotCount = 10;
-            Logger.OnLogRound += Logger_OnLogRound;
-        }
-
-        private void Logger_OnLogRound(object sender, LogRoundEventArgs e)
-        {
-           this.Round = e.Number;
         }
 
         public RobotCommand DoStep(IList<Robot.Common.Robot> robots, int robotToMoveIndex, Map map)
@@ -41,7 +35,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
 
             var robot = robots[robotToMoveIndex];
 
-            if (CanCollectEnergy(robot, map))
+            if (CanCollectEnergy(robot, map, robots))
             {
                 if (CanCreateNewRobot(robot, map, robots))
                 {
@@ -56,63 +50,54 @@ namespace Shpytchuk.Vasyl.RobotChallange
                 return new CollectEnergyCommand();
             }
 
-
+            var newPosition = GoToNearestStation(robot, map, robots);
+            if (newPosition == null) return new CollectEnergyCommand();
+            
             return new MoveCommand()
             {
-                NewPosition = GoToNearestStation(robot, map, robots)
+                NewPosition = newPosition
             };
         }
 
-        protected bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map)
+        protected bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
             var res = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE);
             if(Round <= 45)
-                 return res.Count > 0 && res.Any(station => station.Energy > 0);
+                 return res.Count > 0 && (res.Any(station => station.Energy > 0) || GetNearestRobots(robots, currentRobot.Position, COLLECT_ENERGY_DISTANCE)
+                     .Select(rob => rob.OwnerName == Author).Count() < MAX_COUNT_ROBOTS_NEAR_STATION);
             return res.Count > 0;
         }
 
         protected bool CanCreateNewRobot(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
-            //var station = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE)[0];
-
             if (Round > 45 || RobotCount >= 100)
                 return false;
 
             if (currentRobot.Energy < 100 + CREATE_ROBOT_START_ENERGE)
                 return false;
 
-
-           /* if (GetNearestRobots(robots, station.Position, COLLECT_ENERGY_DISTANCE).Count > MAX_COUNT_ROBOTS_NEAR_STATION 
-              //  && station.Energy < MAX_COUNT_ROBOTS_NEAR_STATION * 40
-                )
-                return false;*/
-
             return true;
         }
 
         protected Position GoToNearestStation(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
-            for (int i = MAX_RADIUS; i < 100; i++)
+            var stations = map.Stations
+                .OrderBy(s => Helper.FindDistance(s.Position, currentRobot.Position))
+                .ToList();
+
+
+            foreach (var station in stations)
             {
-                var stations = map.Stations
-                    .OrderBy(s => Helper.FindDistance(s.Position, currentRobot.Position))
-                    .ToList();
+                if ((GetNearestRobots(robots, station.Position, COLLECT_ENERGY_DISTANCE).Count >
+                        MAX_COUNT_ROBOTS_NEAR_STATION && station.Energy < MAX_COUNT_ROBOTS_NEAR_STATION * 40) || station.Energy <= 0) continue;
 
-                if (stations.Count <= 0) continue;
-
-                foreach (var station in stations)
-                {
-                    if ((GetNearestRobots(robots, station.Position, COLLECT_ENERGY_DISTANCE).Count >
-                            MAX_COUNT_ROBOTS_NEAR_STATION && station.Energy < MAX_COUNT_ROBOTS_NEAR_STATION * 40) || station.Energy <= 0) continue;
-
-                    var to = map.FindFreeCell(station.Position, robots);
-                    var stepAndRadius = Helper.GetOptimalRadius(currentRobot.Position, to, currentRobot.Energy, MAX_RADIUS);
-                           
-                    return stepAndRadius.CountStep + Round >= 51 ? currentRobot.Position : Helper.GetIntermediatePosition(currentRobot.Position, to, stepAndRadius.Radius);
-                }
+                var to = map.FindFreeCell(station.Position, robots);
+                var stepAndRadius = Helper.GetOptimalRadius(currentRobot.Position, to, currentRobot.Energy, MAX_RADIUS);
+                       
+                return stepAndRadius.CountStep + Round >= 51 ? null : Helper.GetIntermediatePosition(currentRobot.Position, to, stepAndRadius.Radius);
             }
 
-            return currentRobot.Position;
+            return null;
         }
 
 
@@ -142,11 +127,19 @@ namespace Shpytchuk.Vasyl.RobotChallange
             return Math.Abs(center.X - point.X) <= radius && Math.Abs(center.Y - point.Y) <= radius;
         }
 
+        private static int Min2D(int x1, int x2)
+        {
+            return ((IEnumerable<int>)new int[3]
+            {
+                (int) Math.Pow((double) (x1 - x2), 2.0),
+                (int) Math.Pow((double) (x1 - x2 + 100), 2.0),
+                (int) Math.Pow((double) (x1 - x2 - 100), 2.0)
+            }).Min();
+        }
+
         public static double FindDistance(Position a, Position b)
         {
-            var dx = a.X - b.X;
-            var dy = a.Y - b.Y;
-            return Math.Sqrt(dx * dx + dy * dy);
+            return Math.Sqrt(Min2D(a.X, b.X) + Min2D(a.Y, b.Y));
         }
 
         public static Position GetIntermediatePosition(Position from, Position to, int radius)
