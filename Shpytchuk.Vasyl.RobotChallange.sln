@@ -5,6 +5,10 @@ VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shpytchuk.Vasyl.RobotChallange", "Shpytchuk.Vasyl.RobotChallange.csproj", "{1966CD82-D9B0-44E6-A494-106627E58817}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary2", "..\ClassLibrary2\ClassLibrary2.csproj", "{C8D06152-BA8C-486D-8213-53F5D2B75C44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary3", "..\ClassLibrary3\ClassLibrary3.csproj", "{1FEC524F-8053-47E1-95C0-494717D2376D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{1966CD82-D9B0-44E6-A494-106627E58817}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1966CD82-D9B0-44E6-A494-106627E58817}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1966CD82-D9B0-44E6-A494-106627E58817}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8D06152-BA8C-486D-8213-53F5D2B75C44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8D06152-BA8C-486D-8213-53F5D2B75C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8D06152-BA8C-486D-8213-53F5D2B75C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8D06152-BA8C-486D-8213-53F5D2B75C44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FEC524F-8053-47E1-95C0-494717D2376D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FEC524F-8053-47E1-95C0-494717D2376D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FEC524F-8053-47E1-95C0-494717D2376D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FEC524F-8053-47E1-95C0-494717D2376D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

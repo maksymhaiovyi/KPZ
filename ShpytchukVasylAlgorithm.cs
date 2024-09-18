@@ -19,10 +19,13 @@ namespace Shpytchuk.Vasyl.RobotChallange
         public int Round { get; set; }
 
         public int RobotCount { get; set; }
+        public int Counter { get; set; }
+
 
         public ShpytchukVasylAlgorithm()
         {
             Round = 0;
+            Counter = 0;
             RobotCount = 10;
             Logger.OnLogRound += Logger_OnLogRound;
         }
@@ -34,6 +37,8 @@ namespace Shpytchuk.Vasyl.RobotChallange
 
         public RobotCommand DoStep(IList<Robot.Common.Robot> robots, int robotToMoveIndex, Map map)
         {
+            CountRound();
+
             var robot = robots[robotToMoveIndex];
 
             if (CanCollectEnergy(robot, map))
@@ -41,6 +46,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
                 if (CanCreateNewRobot(robot, map, robots))
                 {
                     RobotCount++;
+                    Counter++;
                     return new CreateNewRobotCommand()
                     {
                         NewRobotEnergy = CREATE_ROBOT_START_ENERGE,
@@ -60,16 +66,16 @@ namespace Shpytchuk.Vasyl.RobotChallange
         protected bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map)
         {
             var res = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE);
-            if(Round <= 40)
+            if(Round <= 45)
                  return res.Count > 0 && res.Any(station => station.Energy > 0);
             return res.Count > 0;
         }
 
         protected bool CanCreateNewRobot(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
-            var station = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE)[0];
+            //var station = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE)[0];
 
-            if (Round > 40 || RobotCount >= 100)
+            if (Round > 45 || RobotCount >= 100)
                 return false;
 
             if (currentRobot.Energy < 100 + CREATE_ROBOT_START_ENERGE)
@@ -116,6 +122,80 @@ namespace Shpytchuk.Vasyl.RobotChallange
                 .Where(robot => Helper.IsWithinRadius(robot.Position, position, radius))
                 .ToList();
         }
+
+        protected void CountRound()
+        {
+            Counter++;
+            if (Counter <= RobotCount) return;
+            Round++;
+            Counter = 0;
+        } 
+
     }
-    
+
+
+    public class Helper
+    {
+
+        public static bool IsWithinRadius(Position center, Position point, int radius)
+        {
+            return Math.Abs(center.X - point.X) <= radius && Math.Abs(center.Y - point.Y) <= radius;
+        }
+
+        public static double FindDistance(Position a, Position b)
+        {
+            var dx = a.X - b.X;
+            var dy = a.Y - b.Y;
+            return Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        public static Position GetIntermediatePosition(Position from, Position to, int radius)
+        {
+            var distance = FindDistance(from, to);
+
+            if (Math.Round(distance) <= radius)
+            {
+                return to;
+            }
+
+            var dx = to.X - from.X;
+            var dy = to.Y - from.Y;
+            var scale = radius / distance;
+
+            return new Position
+            {
+                X = from.X + (int)(dx * scale),
+                Y = from.Y + (int)(dy * scale)
+            };
+        }
+
+        public static StepAndRadius GetOptimalRadius(Position from, Position to, int robotEnergy, int maxRadius)
+        {
+            var distance = FindDistance(from, to);
+
+            for (int i = maxRadius; i > 0; i--)
+            {
+                var countStep = (int)Math.Round(distance / i);
+                if (Math.Pow(i, 2) * countStep < robotEnergy)
+                    return new StepAndRadius()
+                    {
+                        CountStep = countStep,
+                        Radius = i
+                    };
+            }
+
+            return new StepAndRadius()
+            {
+                CountStep = Int32.MaxValue,
+                Radius = -1
+            };
+        }
+
+    }
+
+    public class StepAndRadius
+    {
+        public int CountStep { get; set; }
+        public int Radius { get; set; }
+    }
 }
