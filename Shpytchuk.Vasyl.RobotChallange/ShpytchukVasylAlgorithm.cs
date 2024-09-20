@@ -8,8 +8,8 @@ namespace Shpytchuk.Vasyl.RobotChallange
 {
     public class ShpytchukVasylAlgorithm : IRobotAlgorithm
     {
-        protected static int COLLECT_ENERGY_DISTANCE = 2;
-        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 3;
+        protected static int COLLECT_ENERGY_DISTANCE = 1;
+        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 2;
         protected static int MAX_RADIUS = 9;
         protected static int CREATE_ROBOT_START_ENERGE = 100;
 
@@ -52,7 +52,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
 
             var newPosition = GoToNearestStation(robot, map, robots);
             if (newPosition == null) return new CollectEnergyCommand();
-            
+
             return new MoveCommand()
             {
                 NewPosition = newPosition
@@ -62,9 +62,9 @@ namespace Shpytchuk.Vasyl.RobotChallange
         protected bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
             var res = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE);
-            if(Round <= 45)
-                 return res.Count > 0 && (res.Any(station => station.Energy > 0) || GetNearestRobots(robots, currentRobot.Position, COLLECT_ENERGY_DISTANCE)
-                     .Select(rob => rob.OwnerName == Author).Count() < MAX_COUNT_ROBOTS_NEAR_STATION);
+            if (Round <= 45)
+                return res.Count > 0 && (res.Any(station => station.Energy > 0) || GetNearestRobots(robots, currentRobot.Position, COLLECT_ENERGY_DISTANCE)
+                    .Select(rob => rob.OwnerName == Author).Count() < MAX_COUNT_ROBOTS_NEAR_STATION);
             return res.Count > 0;
         }
 
@@ -93,7 +93,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
 
                 var to = map.FindFreeCell(station.Position, robots);
                 var stepAndRadius = Helper.GetOptimalRadius(currentRobot.Position, to, currentRobot.Energy, MAX_RADIUS);
-                       
+
                 return stepAndRadius.CountStep + Round >= 51 ? null : Helper.GetIntermediatePosition(currentRobot.Position, to, stepAndRadius.Radius);
             }
 
@@ -114,7 +114,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
             if (Counter <= RobotCount) return;
             Round++;
             Counter = 0;
-        } 
+        }
 
     }
 
