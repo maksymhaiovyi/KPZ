@@ -11,7 +11,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
         protected static int COLLECT_ENERGY_DISTANCE = 2;
         protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 3;
         protected static int MAX_RADIUS = 9;
-        protected static int CREATE_ROBOT_START_ENERGE = 100;
+        protected static int CREATE_ROBOT_START_ENERGY = 100;
 
 
         public string Author => "Shpytchuk Vasyl";
@@ -43,7 +43,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
                     Counter++;
                     return new CreateNewRobotCommand()
                     {
-                        NewRobotEnergy = CREATE_ROBOT_START_ENERGE,
+                        NewRobotEnergy = CREATE_ROBOT_START_ENERGY,
                     };
                 }
 
@@ -52,19 +52,20 @@ namespace Shpytchuk.Vasyl.RobotChallange
 
             var newPosition = GoToNearestStation(robot, map, robots);
             if (newPosition == null) return new CollectEnergyCommand();
-            
+
             return new MoveCommand()
             {
                 NewPosition = newPosition
             };
         }
 
-        protected bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
+        public bool CanCollectEnergy(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
             var res = map.GetNearbyResources(currentRobot.Position, COLLECT_ENERGY_DISTANCE);
-            if(Round <= 45)
-                 return res.Count > 0 && (res.Any(station => station.Energy > 0) || GetNearestRobots(robots, currentRobot.Position, COLLECT_ENERGY_DISTANCE)
-                     .Select(rob => rob.OwnerName == Author).Count() < MAX_COUNT_ROBOTS_NEAR_STATION);
+            Console.WriteLine($"Energy Station Available: {res.Any(station => station.Energy > 0)}");
+            if (Round <= 45)
+                return res.Count > 0 && (res.Any(station => station.Energy > 0) || GetNearestRobots(robots, currentRobot.Position, COLLECT_ENERGY_DISTANCE)
+                    .Select(rob => rob.OwnerName == Author).Count() < MAX_COUNT_ROBOTS_NEAR_STATION);
             return res.Count > 0;
         }
 
@@ -73,16 +74,16 @@ namespace Shpytchuk.Vasyl.RobotChallange
             if (Round > 45 || RobotCount >= 100)
                 return false;
 
-            if (currentRobot.Energy < 100 + CREATE_ROBOT_START_ENERGE)
+            if (currentRobot.Energy < 100 + CREATE_ROBOT_START_ENERGY)
                 return false;
 
             return true;
         }
 
-        protected Position GoToNearestStation(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
+        public Position GoToNearestStation(Robot.Common.Robot currentRobot, Map map, IList<Robot.Common.Robot> robots)
         {
             var stations = map.Stations
-                .OrderBy(s => Helper.FindDistance(s.Position, currentRobot.Position))
+                .OrderBy(s => Helper.FindDistanceBetweenPositions(s.Position, currentRobot.Position))
                 .ToList();
 
 
@@ -92,9 +93,9 @@ namespace Shpytchuk.Vasyl.RobotChallange
                         MAX_COUNT_ROBOTS_NEAR_STATION && station.Energy < MAX_COUNT_ROBOTS_NEAR_STATION * 40) || station.Energy <= 0) continue;
 
                 var to = map.FindFreeCell(station.Position, robots);
-                var stepAndRadius = Helper.GetOptimalRadius(currentRobot.Position, to, currentRobot.Energy, MAX_RADIUS);
-                       
-                return stepAndRadius.CountStep + Round >= 51 ? null : Helper.GetIntermediatePosition(currentRobot.Position, to, stepAndRadius.Radius);
+                var moveParams = Helper.GetOptimalMoveParams(currentRobot.Position, to, currentRobot.Energy, MAX_RADIUS);
+
+                return moveParams.StepsNeeded + Round >= 51 ? null : Helper.GetNextPosition(currentRobot.Position, to, moveParams.RadiusOfStep);
             }
 
             return null;
@@ -104,17 +105,17 @@ namespace Shpytchuk.Vasyl.RobotChallange
         protected IList<Robot.Common.Robot> GetNearestRobots(IList<Robot.Common.Robot> robots, Position position, int radius)
         {
             return robots
-                .Where(robot => Helper.IsWithinRadius(robot.Position, position, radius))
+                .Where(robot => Helper.IsPositionWithinRadius(robot.Position, position, radius))
                 .ToList();
         }
 
         protected void CountRound()
         {
             Counter++;
-            if (Counter <= RobotCount) return;
+            if (Counter <= RobotCount) return;//if all robots have moved
             Round++;
             Counter = 0;
-        } 
+        }
 
     }
 
@@ -122,73 +123,88 @@ namespace Shpytchuk.Vasyl.RobotChallange
     public class Helper
     {
 
-        public static bool IsWithinRadius(Position center, Position point, int radius)
+        public static bool IsPositionWithinRadius(Position center, Position point, int radius)
         {
             return Math.Abs(center.X - point.X) <= radius && Math.Abs(center.Y - point.Y) <= radius;
         }
 
-        private static int Min2D(int x1, int x2)
+        public static int FindDistanceBetweenPoints(int x1, int x2)
         {
             return ((IEnumerable<int>)new int[3]
             {
                 (int) Math.Pow((double) (x1 - x2), 2.0),
-                (int) Math.Pow((double) (x1 - x2 + 100), 2.0),
+                (int) Math.Pow((double) (x1 - x2 + 100), 2.0),//wraps around the map
                 (int) Math.Pow((double) (x1 - x2 - 100), 2.0)
             }).Min();
         }
 
-        public static double FindDistance(Position a, Position b)
+        public static double FindDistanceBetweenPositions(Position a, Position b)
         {
-            return Math.Sqrt(Min2D(a.X, b.X) + Min2D(a.Y, b.Y));
+            return Math.Sqrt(FindDistanceBetweenPoints(a.X, b.X) + FindDistanceBetweenPoints(a.Y, b.Y));
         }
 
-        public static Position GetIntermediatePosition(Position from, Position to, int radius)
+        public static int FindDirectionWithWrap(int x1, int x2)
         {
-            var distance = FindDistance(from, to);
+            int directDiff = x2 - x1;
+            int wrapPositive = (x2 - x1 + 100);
+            int wrapNegative = (x2 - x1 - 100);
 
-            if (Math.Round(distance) <= radius)
+            int[] options = { directDiff, wrapPositive, wrapNegative };
+
+            return options.OrderBy(Math.Abs).First();
+        }
+
+        public static Position GetNextPosition(Position start, Position destination, int energyRadius)
+        {
+            var distance = FindDistanceBetweenPositions(start, destination);
+
+            if (Math.Round(distance) <= energyRadius)
             {
-                return to;
+                return destination;
             }
 
-            var dx = to.X - from.X;
-            var dy = to.Y - from.Y;
-            var scale = radius / distance;
+            var dx = FindDirectionWithWrap(start.X, destination.X);
+            var dy = FindDirectionWithWrap(start.Y, destination.Y);
+            var scale = energyRadius / distance;
+
+            int newX = start.X + (int)(dx * scale);
+            int newY = start.Y + (int)(dy * scale);
+            newX = (newX + 100) % 100;
+            newY = (newY + 100) % 100;
 
             return new Position
             {
-                X = from.X + (int)(dx * scale),
-                Y = from.Y + (int)(dy * scale)
+                X = newX,
+                Y = newY
             };
         }
 
-        public static StepAndRadius GetOptimalRadius(Position from, Position to, int robotEnergy, int maxRadius)
+
+        public static MoveParams GetOptimalMoveParams(Position start, Position destination, int robotEnergy, int maxRadius)
         {
-            var distance = FindDistance(from, to);
+            var distance = FindDistanceBetweenPositions(start, destination);
 
             for (int i = maxRadius; i > 0; i--)
             {
                 var countStep = (int)Math.Round(distance / i);
                 if (Math.Pow(i, 2) * countStep < robotEnergy)
-                    return new StepAndRadius()
-                    {
-                        CountStep = countStep,
-                        Radius = i
-                    };
+                    return new MoveParams(countStep,i);
             }
 
-            return new StepAndRadius()
-            {
-                CountStep = Int32.MaxValue,
-                Radius = -1
-            };
+            return new MoveParams(Int32.MaxValue,-1);
         }
 
     }
 
-    public class StepAndRadius
+    public class MoveParams
     {
-        public int CountStep { get; set; }
-        public int Radius { get; set; }
+        public int StepsNeeded { get; set; }
+        public int RadiusOfStep { get; set; }
+
+        public MoveParams(int steps, int radius)
+        {
+            StepsNeeded = steps;
+            RadiusOfStep = radius;
+        }
     }
 }
