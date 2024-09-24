@@ -1,9 +1,9 @@
 using Xunit;
-using Shpytchuk.Vasyl.RobotChallange;
+using Haiovyi.Maksym.RobotChallange;
 using Robot.Common;
-using static Shpytchuk.Vasyl.RobotChallange.Helper;
+using static Haiovyi.Maksym.RobotChallange.Helper;
 
-namespace VasylShpytchukAlgorithmTest
+namespace HaiovyiMaksymAlgorithmTest
 {
     public class HelperTests
     {

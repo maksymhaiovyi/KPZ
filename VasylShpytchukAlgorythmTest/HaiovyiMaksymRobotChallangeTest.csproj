@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shpytchuk.Vasyl.RobotChallange\Shpytchuk.Vasyl.RobotChallange.csproj" />
+    <ProjectReference Include="..\Shpytchuk.Vasyl.RobotChallange\Haiovyi.Maksym.RobotChallange.csproj" />
   </ItemGroup>
 
   <ItemGroup>

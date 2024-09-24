@@ -4,17 +4,17 @@ using System.Diagnostics;
 using System.Linq;
 using Robot.Common;
 
-namespace Shpytchuk.Vasyl.RobotChallange
+namespace Haiovyi.Maksym.RobotChallange
 {
-    public class ShpytchukVasylAlgorithm : IRobotAlgorithm
+    public class HaiovyiMaksymAlgorithm : IRobotAlgorithm
     {
-        protected static int COLLECT_ENERGY_DISTANCE = 2;
-        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 3;
+        protected static int COLLECT_ENERGY_DISTANCE = 1;
+        protected static int MAX_COUNT_ROBOTS_NEAR_STATION = 2;
         protected static int MAX_RADIUS = 9;
         protected static int CREATE_ROBOT_START_ENERGY = 100;
 
 
-        public string Author => "Shpytchuk Vasyl";
+        public string Author => "Haiovyi Maksym";
 
         public int Round { get; set; }
 
@@ -22,7 +22,7 @@ namespace Shpytchuk.Vasyl.RobotChallange
         public int Counter { get; set; }
 
 
-        public ShpytchukVasylAlgorithm()
+        public HaiovyiMaksymAlgorithm()
         {
             Round = 0;
             Counter = 0;
@@ -188,10 +188,10 @@ namespace Shpytchuk.Vasyl.RobotChallange
             {
                 var countStep = (int)Math.Round(distance / i);
                 if (Math.Pow(i, 2) * countStep < robotEnergy)
-                    return new MoveParams(countStep,i);
+                    return new MoveParams(countStep, i);
             }
 
-            return new MoveParams(Int32.MaxValue,-1);
+            return new MoveParams(Int32.MaxValue, -1);
         }
 
     }

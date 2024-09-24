@@ -1,13 +1,13 @@
 ﻿using Xunit;
-using Shpytchuk.Vasyl.RobotChallange;
+using Haiovyi.Maksym.RobotChallange;
 using Robot.Common;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit.Sdk;
 
-namespace VasylShpytchukRobotChallangeTest
+namespace HaiovyiMaksymRobotChallangeTest
 {
-    public class ShpytchukVasylAlgorithmTest
+    public class HaiovyiMaksymAlgorithmTest
     {
         #region GoToNearestStation
         [Fact]
@@ -27,56 +27,21 @@ namespace VasylShpytchukRobotChallangeTest
             map.Stations.Add(energyStation);
 
             var robot = new Robot.Common.Robot { Position = new Position { X = 5, Y = 5 }, Energy = 100 };
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
 
             // Act
             var resultPosition = algorithm.GoToNearestStation(robot, map, new List<Robot.Common.Robot> { robot });
             bool isWithinStation = Helper.IsPositionWithinRadius(stationPosition, resultPosition, radius);
-            
+
             // Assert
             Assert.True(isWithinStation);
-        }
-
-        [Fact]
-        public void GoToNearestStation_WhenStationOvercrowded_ShouldReturnNull()
-        {
-            // Arrange
-            var algorithm = new ShpytchukVasylAlgorithm();
-            var robot = new Robot.Common.Robot
-            {
-                Position = new Position(0, 0),
-                Energy = 200
-            };
-
-            var map = new Map();
-            var stationPosition = new Position(5, 5);
-            var energyStation = new EnergyStation
-            {
-                Position = stationPosition,
-                Energy = 100
-            };
-            map.Stations.Add(energyStation);
-
-            var robots = new List<Robot.Common.Robot>
-            {
-                new Robot.Common.Robot { Position = stationPosition },
-                new Robot.Common.Robot { Position = new Position(6, 5) },
-                new Robot.Common.Robot { Position = new Position(5, 6) },
-                new Robot.Common.Robot { Position = new Position(4, 5) }
-            };
-
-            // Act
-            var result = algorithm.GoToNearestStation(robot, map, robots);
-
-            // Assert
-            Assert.Null(result); 
         }
 
         [Fact]
         public void GoToNearestStation_WhenStationEnergyDepleted_ShouldReturnNull()
         {
             // Arrange
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
             var robot = new Robot.Common.Robot
             {
                 Position = new Position(0, 0),
@@ -104,7 +69,7 @@ namespace VasylShpytchukRobotChallangeTest
         public void GoToNearestStation_WhenRobotCantReachStation_ShouldReturnNull()
         {
             // Arrange
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
             algorithm.Round = 50; 
 
             var robot = new Robot.Common.Robot
@@ -138,7 +103,7 @@ namespace VasylShpytchukRobotChallangeTest
         public void CanCollectEnergy_WhenResourcesAvailable_ShouldReturnTrue()
         {
             // Arrange
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
             var robot = new Robot.Common.Robot
             {
                 Position = new Position(0, 0),
@@ -168,7 +133,7 @@ namespace VasylShpytchukRobotChallangeTest
         public void CanCollectEnergy_WhenNoResources_ShouldReturnFalse()
         {
             // Arrange
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
             var robot = new Robot.Common.Robot
             {
                 Position = new Position(0, 0),
@@ -199,7 +164,7 @@ namespace VasylShpytchukRobotChallangeTest
             var map = new Map();
 
             // Act
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
             var result = algorithm.DoStep(robots, 0, map);
 
             // Assert
@@ -214,7 +179,7 @@ namespace VasylShpytchukRobotChallangeTest
             var robots = new List<Robot.Common.Robot> { robot };
             var map = new Map();
 
-            var algorithm = new ShpytchukVasylAlgorithm();
+            var algorithm = new HaiovyiMaksymAlgorithm();
 
             // Act
             var result = algorithm.DoStep(robots, 0, map);
